@@ -22,7 +22,7 @@ server = app.server
 app.config.suppress_callback_exceptions=True
 
 df = pd.read_excel("data/full_iseller_data.xlsx")
-df = df.sample(10000)
+# df = df.sample(10000)
 
 # will remove 
 df['closed_date'] = pd.to_datetime(df['closed_date'])
@@ -37,10 +37,6 @@ product_categories = df['product_type'].unique().tolist()
 product_names = df['clean_product_name'].unique().tolist()
 branches = df['outlet_name'].unique().tolist()
 quarter_year = df['quarter_year'].unique().tolist()
-
-# df = df.sample(10000)
-
-
 
 
 
