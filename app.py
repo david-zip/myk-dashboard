@@ -36,6 +36,7 @@ product_names = df['clean_product_name'].unique().tolist()
 branches = df['outlet_name'].unique().tolist()
 quarter_year = df['quarter_year'].unique().tolist()
 
+df = df.sample(10000)
 
 
 
