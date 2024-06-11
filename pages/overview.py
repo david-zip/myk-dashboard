@@ -8,7 +8,6 @@ from dash_extensions.enrich import Output, Input, State, html, dcc, callback
 from dash.exceptions import PreventUpdate
 from components.standard_components import create_card_dmc, create_accordion_label, create_accordion_content
 from graphs.plotly_graphs import bar_chart_vertical, plot_barchart, plot_line_chart
-from io import StringIO
 import boto3
 
 
@@ -81,67 +80,8 @@ graphs = dbc.Col([
             style={"padding": "10px"}  # Adjust padding as needed
         )
     ]),
-    # dbc.Row([
-    #     dbc.Col(
-    #         create_card_dmc("Pie Chart", dcc.Graph(
-    #             id='graph3',
-    #             figure=px.pie(product_quantity.head(10), values='quantity', names='product_name')
-    #         ), "pie-chart-button"),
-    #         width=12,  # Full width for the pie chart
-    #         style={"padding": "10px"}  # Adjust padding as needed
-    #     )
-    # ])
+ 
 ], width=12)
-
-# graphs = dbc.Col([
-#     dbc.Row([
-#         dbc.Col(
-#             create_card_dmc("Top Selling Product by Quanity", dcc.Loading(dcc.Graph(id='top-product-bar')),"bar-button"),
-#             width=3,
-#             style={"marginLeft": "-10px", }  # Adjust the margin to reduce spacing
-
-#         ),
-
-#          dbc.Col(
-#             create_card_dmc("Top Selling Category by Quanity",
-#                             dcc.Loading(dcc.Graph(id='top-category-bar')), "monthly-category-button"),
-#             width=3,
-#             style={"marginLeft": "40px", }  # Adjust the margin to reduce spacing
-#         )
-        
-#         # dbc.Col(
-#         #     create_card_dmc("Monthly Sales by Quantity",
-#         #                     dcc.Graph(id='month-line-graph'), "monthly-q-button"),
-#         #     width=4,
-#         #     style={"marginLeft": "-150px", }  # Adjust the margin to reduce spacing
-#         # )
-#     ]),
-#     dbc.Row([
-#         dbc.Col(
-#             create_card_dmc("Monthly Sales by Quantity", dcc.Loading(dcc.Graph(id='month-line-graph')),"monthly-q-button"),
-#             width=4,
-#             style={"marginLeft": "-10px", }  # Adjust the margin to reduce spacing
-#         ),
-#         dbc.Col(
-#             create_card_dmc("Daily Sales by Quantity", dcc.Loading(dcc.Graph(id='daily-line-graph')),"daily-q-button"),
-#             width=3,
-#             style={"marginLeft": "20x", }  # Adjust the margin to reduce spacing
-#         )
-#     ]),
-#     dbc.Row([
-#             dbc.Col(
-#             create_card_dmc("Pie Chart",
-#             dcc.Graph(
-#                 id='graph3',
-#                 figure=px.pie(product_quantity.head(10), values='quantity', names='product_name')
-#             ), "pie-chart-button"),
-#             width=3,
-#             style={"marginLeft": "-10px", }  # Adjust the margin to reduce spacing
-
-#         ),
-#     ])
-# ], width=12)
-
 
 
 
@@ -239,11 +179,6 @@ def plot_top_product_quant(data):
     product_quantity = df.groupby('product_name')['quantity'].sum().reset_index()\
         .sort_values(by='quantity', ascending=False)
     
-    # fig = plot_barchart(product_quantity, 'product_name', 10)
-    # fig.update_layout({
-    # 'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-    # 'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-    # })
     return bar_chart_vertical(product_quantity.head(10), x="quantity", y="product_name", color="product_name")
 
 
