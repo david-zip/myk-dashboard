@@ -8,8 +8,6 @@ from dash.exceptions import PreventUpdate
 from dash_extensions.enrich import DashProxy, Output, Input, State, Serverside, html, dcc, \
     ServersideOutputTransform, callback
 from data_proccessing.utils import *
-from io import StringIO
-import boto3
 
 
 

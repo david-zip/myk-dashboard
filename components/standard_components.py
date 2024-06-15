@@ -33,6 +33,39 @@ def get_growth(df, period, curr_period, metric, agg="sum"):
     
     return round(calculate_growth(current_month_value, previous_month_value), 1)
 
+def get_growth_30_days(df, date_column, metric, agg="sum"):
+    """Get growth rate from df for the last 30 days compared to the previous 30 days.
+    
+    df: DataFrame
+    date_column: Date column in the DataFrame
+    metric: Metric to calculate growth rate for (e.g., total_profit, total_rev)
+    agg: Aggregation function ('sum' or 'mean')
+    """
+    # Ensure date column is in datetime format
+    df[date_column] = pd.to_datetime(df[date_column])
+    
+    # Define aggregation functions dictionary
+    agg_func = {'sum': 'sum', 'mean': 'mean', 'count': 'count'}
+    
+    # Filter the last 60 days
+    end_date = df[date_column].max()
+    start_date = end_date - pd.Timedelta(days=60)
+    recent_df = df[(df[date_column] >= start_date) & (df[date_column] <= end_date)]
+    
+    # Calculate the total or mean for the last 30 days and the previous 30 days
+    last_30_days_end = end_date
+    last_30_days_start = last_30_days_end - pd.Timedelta(days=30)
+    prev_30_days_end = last_30_days_start - pd.Timedelta(days=1)
+    prev_30_days_start = prev_30_days_end - pd.Timedelta(days=30)
+    
+    last_30_days_df = recent_df[(recent_df[date_column] > last_30_days_start) & (recent_df[date_column] <= last_30_days_end)]
+    prev_30_days_df = recent_df[(recent_df[date_column] >= prev_30_days_start) & (recent_df[date_column] <= prev_30_days_end)]
+    
+    last_30_days_value = last_30_days_df[metric].agg(agg_func[agg])
+    prev_30_days_value = prev_30_days_df[metric].agg(agg_func[agg])
+    
+    return round(calculate_growth(last_30_days_value, prev_30_days_value), 1)
+
 def get_icon(icon):
     return DashIconify(icon=icon, height=16)
 
@@ -51,9 +84,11 @@ def create_card(title, curr_metric, prev_metric=None, icon=None):
     # Create card layout
     card = dmc.Card(
         children=[
-            html.H6([get_icon(icon), " ", title] if icon else title, className="card-title"),
-            html.H4(curr_metric),
-            dmc.Text(f"{growth}%", c=c),
+            html.H6([get_icon(icon), " ", title] if icon else title, className="card-title", style={"textAlign": "center"}),
+            html.H4(curr_metric, style={"textAlign": "center"}),
+            dmc.Text(f"{growth}%", c=c, align="center"),
+            dmc.Text("vs previous 30 days", size="xs", c="gray", align="center")
+
         ],
         withBorder=True,
         w=300,
