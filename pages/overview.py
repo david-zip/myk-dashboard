@@ -18,10 +18,12 @@ dash.register_page(
     name='Our Analytics Dashboard'
 )
  
-df = pd.read_excel("data/full_iseller_data.xlsx")
+# df = pd.read_excel("data/full_iseller_data.xlsx")
+# df = pd.read_excel("data/.full_iseller_data.xlsx.icloud")
 
-product_quantity = df.groupby('product_name')['quantity'].sum().reset_index()\
-    .sort_values(by='quantity', ascending=False)
+
+# product_quantity = df.groupby('product_name')['quantity'].sum().reset_index()\
+#     .sort_values(by='quantity', ascending=False)
 
 # TEMP
 characters_list = [

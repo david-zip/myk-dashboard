@@ -2,11 +2,12 @@ import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash import  html
 from dash_iconify import DashIconify
-
+import pandas as pd
+from datetime import datetime, timedelta
 
 def calculate_growth(current, initial):
     growth_rate = ((current - initial) / initial) * 100
-    return growth_rate
+    return round(growth_rate,2)
 
 def get_growth(df, period, curr_period, metric, agg="sum"):
     # replace curr_period with current month from datetime
@@ -22,71 +23,96 @@ def get_growth(df, period, curr_period, metric, agg="sum"):
     # Define aggregation functions dictionary
     agg_func = {'sum': 'sum', 'mean': 'mean', 'count': 'count'}
 
-    # Group by period and apply aggregation function
-    grouped_df = dff.groupby([period])[metric].agg(agg_func[agg]).reset_index().sort_values(by=period)
-    
-    # Pivot the DataFrame
-    pivot_df = grouped_df.pivot_table(index=None, columns=period, values=metric, aggfunc=agg_func[agg]).reset_index(drop=True)
-    
-    current_month_value = pivot_df[curr_period].max()
-    previous_month_value = pivot_df[curr_period - 1].max()
-    
-    return round(calculate_growth(current_month_value, previous_month_value), 1)
+    try:
+        # Group by period and apply aggregation function
+        grouped_df = dff.groupby([period])[metric].agg(agg_func[agg]).reset_index().sort_values(by=period)
+        
+        # Pivot the DataFrame
+        pivot_df = grouped_df.pivot_table(index=None, columns=period, values=metric, aggfunc=agg_func[agg]).reset_index(drop=True)
+        
+        current_month_value = pivot_df[curr_period].max()
+        previous_month_value = pivot_df[curr_period - 1].max()
+        
+        return round(calculate_growth(current_month_value, previous_month_value), 1)
+    except:
+        return "Time period difference less than 30 days"
 
-def get_growth_30_days(df, date_column, metric, agg="sum"):
-    """Get growth rate from df for the last 30 days compared to the previous 30 days.
+def calculate_transaction_stats(df):
+    # Ensure the date column is in datetime format
+    df['date'] = pd.to_datetime(df['date'])
+
+    earliest_date = df.date.min()
+    latest_date = df.date.max()
+
     
-    df: DataFrame
-    date_column: Date column in the DataFrame
-    metric: Metric to calculate growth rate for (e.g., total_profit, total_rev)
-    agg: Aggregation function ('sum' or 'mean')
-    """
-    # Ensure date column is in datetime format
-    df[date_column] = pd.to_datetime(df[date_column])
+    # Calculate the sum and mean of transactions for the current date
+    total_rev_sum = df.groupby('order_id')['total_order_amount'].sum().sum()
+    total_profit = df['profit'].sum()
+    total_avg_spening = df.groupby('order_id')['total_order_amount'].mean().mean()
+    total_unique_customers = df["customer_id"].nunique()
+    total_orders = df.groupby('order_id').size().count()
+    total_unit_sold = df['quantity'].sum()
     
-    # Define aggregation functions dictionary
-    agg_func = {'sum': 'sum', 'mean': 'mean', 'count': 'count'}
+    if (latest_date - earliest_date).days < 30:
+        return "Time period less than 30 days"
+
+    # Define the date range for the last 30 days
+    last_30_date = latest_date - timedelta(days=30)
     
-    # Filter the last 60 days
-    end_date = df[date_column].max()
-    start_date = end_date - pd.Timedelta(days=60)
-    recent_df = df[(df[date_column] >= start_date) & (df[date_column] <= end_date)]
+    # Filter transactions for the last 30 days
+    transaction_30_days_before = df[(df['date'] <= last_30_date)]
+
+   
+    # Calculate the sum and mean of transactions for the last 30 days
+    last_30_days_rev = transaction_30_days_before.groupby('order_id')['total_order_amount'].sum().sum()
+    last_30_days_profit = transaction_30_days_before['profit'].sum()
+    last_30_days_avg_spening = transaction_30_days_before.groupby('order_id')['total_order_amount'].mean().mean()
+    last_30_days_unique_customers = transaction_30_days_before["customer_id"].nunique()
+    last_30_days_total_orders = transaction_30_days_before.groupby('order_id').size().count()
+    last_30_days_total_unit_sold = transaction_30_days_before['quantity'].sum()
+
+    rev_growth = calculate_growth(total_rev_sum, last_30_days_rev)
+    profit_growth = calculate_growth(total_profit, last_30_days_profit)
+    avg_spending_growth = calculate_growth(total_avg_spening, last_30_days_avg_spening)
+    customer_growth = calculate_growth(total_unique_customers, last_30_days_unique_customers)
+    total_orders_growth = calculate_growth(total_orders, last_30_days_total_orders)
+    unit_sold_growth = calculate_growth(total_unit_sold, last_30_days_total_unit_sold)
+
     
-    # Calculate the total or mean for the last 30 days and the previous 30 days
-    last_30_days_end = end_date
-    last_30_days_start = last_30_days_end - pd.Timedelta(days=30)
-    prev_30_days_end = last_30_days_start - pd.Timedelta(days=1)
-    prev_30_days_start = prev_30_days_end - pd.Timedelta(days=30)
-    
-    last_30_days_df = recent_df[(recent_df[date_column] > last_30_days_start) & (recent_df[date_column] <= last_30_days_end)]
-    prev_30_days_df = recent_df[(recent_df[date_column] >= prev_30_days_start) & (recent_df[date_column] <= prev_30_days_end)]
-    
-    last_30_days_value = last_30_days_df[metric].agg(agg_func[agg])
-    prev_30_days_value = prev_30_days_df[metric].agg(agg_func[agg])
-    
-    return round(calculate_growth(last_30_days_value, prev_30_days_value), 1)
+    # Return the calculated values
+    return {
+        'rev_growth': rev_growth,
+        'profit_growth': profit_growth,
+        'avg_spending_growth': avg_spending_growth,
+        'customer_growth': customer_growth,
+        'total_orders_growth': total_orders_growth,
+        'unit_sold_growth': unit_sold_growth
+    }
+
 
 def get_icon(icon):
     return DashIconify(icon=icon, height=16)
 
 def create_card(title, curr_metric, prev_metric=None, icon=None):
-    # Determine growth and color
+    c = "black"  # Default color
     if prev_metric:
         growth = prev_metric
-        if growth > 0:
+        if isinstance(growth, str):
+            c = "gray"
+        elif growth > 0:
             c = "green"
         else:
             c = "red"
     else:
         growth = ""
-        c = "black"
+
 
     # Create card layout
     card = dmc.Card(
         children=[
             html.H6([get_icon(icon), " ", title] if icon else title, className="card-title", style={"textAlign": "center"}),
             html.H4(curr_metric, style={"textAlign": "center"}),
-            dmc.Text(f"{growth}%", c=c, align="center"),
+            dmc.Text(f"{growth}%" if growth != "Time period less than 30 days" else f"{growth}", size="sm", c=c, align="center"),
             dmc.Text("vs previous 30 days", size="xs", c="gray", align="center")
 
         ],

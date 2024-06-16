@@ -3,12 +3,11 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 import pandas as pd
-from components.standard_components import create_card, get_growth, get_icon
+from components.standard_components import create_card, get_growth, get_icon, calculate_transaction_stats
 from dash.exceptions import PreventUpdate
 from dash_extensions.enrich import DashProxy, Output, Input, State, Serverside, html, dcc, \
     ServersideOutputTransform, callback
 from data_proccessing.utils import *
-
 
 
 app = DashProxy(__name__,
@@ -20,7 +19,7 @@ server = app.server
 app.config.suppress_callback_exceptions=True
 
 df = pd.read_excel("data/full_iseller_data.xlsx")
-# df = df.sample(10000)
+# df = df.sample(100)
 
 # will remove 
 df['closed_date'] = pd.to_datetime(df['closed_date'])
@@ -35,8 +34,7 @@ product_categories = df['product_type'].unique().tolist()
 product_names = df['clean_product_name'].unique().tolist()
 branches = df['outlet_name'].unique().tolist()
 quarter_year = df['quarter_year'].unique().tolist()
-
-
+category_dict = df.groupby('product_type')['clean_product_name'].apply(lambda x: list(set(x))).to_dict()
 
 ############ Navbar #########################
 
@@ -72,16 +70,6 @@ burger = html.Div(
 
 
 ########## Filters
-product_multi_select = dmc.MultiSelect(
-            label="Product",
-            description="Select Product Name",
-            placeholder="Select all you like!",
-            id="product-select",
-            # value=["ng", "vue"],
-            data=[{"label": names, "value": names} for names in product_names],
-            w=240,
-            mb=10,
-        ),
 
 category_multi_select = dmc.MultiSelect(
             label="Category",
@@ -94,6 +82,16 @@ category_multi_select = dmc.MultiSelect(
             mb=10,
         ),
 
+product_multi_select = dmc.MultiSelect(
+            label="Product",
+            description="Select Product Name",
+            placeholder="Select all you like!",
+            id="product-select",
+            # value=["ng", "vue"],
+            # data=[{"label": names, "value": names} for names in category_dict.keys()],
+            w=240,
+            mb=10,
+        ),
 
 location_multi_select = dmc.MultiSelect(
             label="Location",
@@ -189,12 +187,44 @@ app.layout =html.Div(
 
 
 )
-
-
+#########################
+### Callbacks
+#########################
 @callback(Output("drawer-simple", "opened"),
          Input("burger-button", "opened"))
 def open_burger(opened):
     return str(opened), True
+
+
+# Chained callbacks for filters 
+@app.callback(
+    Output('product-select', 'data'),
+    Input('category-select', 'value')
+)
+def set_product_options(selected_categories):
+    print(f"Selected Categories: {selected_categories}")
+    if not selected_categories:
+        return []
+    
+    # Aggregate products for the selected categories
+    products = []
+    for category in selected_categories:
+        products.extend(category_dict.get(category, []))
+    
+    products = list(set(products))  # Remove duplicates if any
+    print(f"Products for selected categories: {products}")
+    
+    return [{'label': product, 'value': product} for product in products]
+
+@app.callback(
+    Output('product-select', 'value'),
+    Input('product-select', 'options')
+)
+def set_product_value(available_options):
+    if available_options:
+        return available_options[0]['value']
+    return None
+
 
 @callback(
     Output(component_id='intermediate-value' , component_property='data'),
@@ -327,14 +357,18 @@ def update_indicators(data):
     formatted_avg_spending = f"IDR {avg_spending:,.2f}"
 
     # Get Growth 
-    # replace curr_period with current month from datetime
+    growth = calculate_transaction_stats(data)
 
-    unit_growth = get_growth(df, "month", 3, "quantity")
-    rev_growth = get_growth(df, "month", 3, "total_order_amount")
-    profit_growth = get_growth(df, "month", 3, "profit")
-    cust_growth = get_growth(df, "month", 3, "quantity")
-    order_growth = get_growth(df, "month", 3, "order_id" , "count")
-    avg_spending_growth = get_growth(df, "month", 3, "total_order_amount", "mean")
+    if growth == "Time period less than 30 days":
+        rev_growth, profit_growth, unit_growth, cust_growth, avg_spending_growth, order_growth = ["Time period less than 30 days"] * 6
+    else:
+        rev_growth = growth['rev_growth']
+        profit_growth = growth['profit_growth']
+        unit_growth = growth['unit_sold_growth']
+        cust_growth = growth['customer_growth']
+        avg_spending_growth = growth['avg_spending_growth']
+        order_growth = growth['unit_sold_growth']
+
     
     # Create Cards for the metrics along side with the growth rate
     cols = [
@@ -353,4 +387,4 @@ def update_indicators(data):
     return cols, col_2
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)

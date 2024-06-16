@@ -34,10 +34,10 @@ def plot_line_chart(df
             agg_df = df.groupby(group_by)['quantity'].sum().reset_index()
 
         fig = px.line(agg_df, x=x, y=y, title=title, template="plotly")
-        logging.debug("Line chart created successfully")
+        # logging.debug("Line chart created successfully")
         return fig
     except Exception as e:
-        logging.error(f"Error creating plot: {e}")
+        # logging.error(f"Error creating plot: {e}")
         raise
 
 
