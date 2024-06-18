@@ -66,14 +66,14 @@ def bar_chart_vertical(
     )
 
     fig_.update_layout(
-        titlefont=dict(family="Calibri", size=12, color="black"),
+        titlefont=dict(size=12, color="black"),
         title_text=title_text,
         legend_title_text="",
         showlegend=False,
         hovermode="y unified",
         plot_bgcolor="white",
         legend=dict(
-            font=dict(family="Calibri", size=10, color="black"),
+            font=dict(size=10, color="black"),
             orientation="h",
             yanchor="bottom",
             y=-0.2,
@@ -84,8 +84,8 @@ def bar_chart_vertical(
 
     fig_.update_xaxes(
         title_text=x_text,
-        titlefont=dict(family="Calibri", size=12, color="black"),
-        tickfont=dict(family="Calibri", size=10, color="black"),
+        titlefont=dict(size=12, color="black"),
+        tickfont=dict(size=10, color="black"),
         title_standoff=3,
         showspikes=False,
         spikemode="across",
@@ -99,8 +99,8 @@ def bar_chart_vertical(
 
     fig_.update_yaxes(
         title_text=y_text,
-        titlefont=dict(family="Calibri", size=12, color="black"),
-        tickfont=dict(family="Calibri", size=10, color="black"),
+        titlefont=dict(size=12, color="black"),
+        tickfont=dict(size=10, color="black"),
         title_standoff=3,
         fixedrange=True,
         linewidth=1,

@@ -10,6 +10,7 @@ from dash_extensions.enrich import DashProxy, Output, Input, State, Serverside, 
 from data_proccessing.utils import *
 
 
+
 app = DashProxy(__name__,
                 use_pages=True,
                 external_stylesheets=[dbc.themes.BOOTSTRAP],
@@ -76,10 +77,14 @@ category_multi_select = dmc.MultiSelect(
             description="Select Product Category",
             placeholder="Select all you like!",
             id="category-select",
-            # value=["ng", "vue"],
             data=[{"label": category, "value": category} for category in product_categories],
             w=240,
             mb=10,
+            styles={
+             "input": {
+                "maxHeight": "80px",  
+                "overflowY": "auto"    
+        }}
         ),
 
 product_multi_select = dmc.MultiSelect(
@@ -87,10 +92,15 @@ product_multi_select = dmc.MultiSelect(
             description="Select Product Name",
             placeholder="Select all you like!",
             id="product-select",
-            # value=["ng", "vue"],
+            searchable=True,
             # data=[{"label": names, "value": names} for names in category_dict.keys()],
             w=240,
             mb=10,
+            styles={
+             "input": {
+                "maxHeight": "80px",  
+                "overflowY": "auto"   
+        }}
         ),
 
 location_multi_select = dmc.MultiSelect(
@@ -105,29 +115,50 @@ location_multi_select = dmc.MultiSelect(
         ),
 
 
-select_start_date = dmc.DateInput(
-            id="start-date",
-            label="Enter the Start Date",
-            description="Select start date",
-            style={"width": 240},
-            clearable=True
-        )
+select_start_date = dmc.Tooltip(
+    label="Remember to clear Quarter when selecting dates",
+    position="top",
+    withArrow=True,
+    offset=-5,
+    children=[
+                dmc.DateInput(
+                id="start-date",
+                label="Enter the Start Date",
+                description="Select start date",
+                style={"width": 240},
+                clearable=True)]
+)
 
-select_end_date = dmc.DateInput(
-            id="end-date",
-            label="Enter the End Date",
-            description="Select end date",
-            style={"width": 230},
-            clearable=True
 
-        )
+select_end_date = dmc.Tooltip(
+    label="Remember to clear Quarter when selecting dates",
+    position="top",
+    offset= -2,
+    withArrow=True,
+    children=[
+                dmc.DateInput(
+                id="end-date",
+                label="Enter the Start Date",
+                description="Select start date",
+                style={"width": 240},
+                clearable=True)]
+)
 
-select_quarter = dmc.MultiSelect(
+# select_end_date = dmc.DateInput(
+#             id="end-date",
+#             label="Enter the End Date",
+#             description="Select end date",
+#             style={"width": 230},
+#             clearable=True
+
+#         )
+
+select_quarter = dmc.Select(
             label="Quarter",
             description="Select quarter",
             placeholder="Select all you like!",
             id="quarter-select",
-            # value=["ng", "vue"],
+            clearable=True,
             data=[{"label": quarter, "value": quarter} for quarter in quarter_year],
             w=240,
             mb=10,
@@ -142,6 +173,9 @@ filter_rows = dbc.Col([
         dbc.Col(select_quarter, width=2),
         dbc.Col(category_multi_select, width=2),
         dbc.Col(product_multi_select, width=2),
+        dbc.Col(dmc.Button("Select All Products"
+        , id="select-all-button", mb=10, size="xs"), style={"marginTop": "47px"}  # Adjust the vertical position by setting margin-top
+)
     ], className="custom-gutter"),
 ], width={"size": 12, "offset": 1})
 
@@ -150,7 +184,9 @@ filter_row_2 = dbc.Col([
         dbc.Col(location_multi_select, width=2)], className="custom-gutter"),
 ], width={"size": 12, "offset": 1})
 
+################
 #### Indicators 
+###############
 indicator_row_1 =dbc.Col([
     dbc.Row([
     ], id="indicator-row-1")]
@@ -196,25 +232,68 @@ def open_burger(opened):
     return str(opened), True
 
 
+@app.callback(
+    Output("product-select", "value", allow_duplicate=True),
+    Input("select-all-button", "n_clicks"),
+    prevent_initial_call=True
+)
+def select_all_categories(n_clicks):
+    if n_clicks:
+        return [product for product in product_names]
+    return []
+
 # Chained callbacks for filters 
 @app.callback(
-    Output('product-select', 'data'),
+    Output('product-select', 'data', allow_duplicate=True),
     Input('category-select', 'value')
 )
 def set_product_options(selected_categories):
     print(f"Selected Categories: {selected_categories}")
     if not selected_categories:
-        return []
-    
+        data=[{"label": category, "value": category} for category in product_names]
+        return data
+ 
     # Aggregate products for the selected categories
     products = []
     for category in selected_categories:
         products.extend(category_dict.get(category, []))
     
     products = list(set(products))  # Remove duplicates if any
-    print(f"Products for selected categories: {products}")
+    # print(f"Products for selected categories: {products}")
     
     return [{'label': product, 'value': product} for product in products]
+
+# @app.callback(
+#     Output("product-select", "data"),
+#     Output("product-select", "value"),
+#     Input("category-select", "value"),
+#     Input("select-all-button", "n_clicks"),
+#     prevent_initial_call=True
+# )
+# def update_products(selected_categories, n_clicks):
+#     # Determine which input triggered the callback
+#     triggered_id = ctx.triggered_id
+    
+#     if triggered_id == "select-all-button":
+#         # If the button was clicked, select all products
+#         return dcc.no_update, [product for product in product_names]
+    
+#     if triggered_id == "category-select":
+#         # If categories were selected, filter products based on the selected categories
+#         if not selected_categories:
+#             data = [{"label": product, "value": product} for product in product_names]
+#             return data, []
+        
+#         # Aggregate products for the selected categories
+#         products = []
+#         for category in selected_categories:
+#             products.extend(category_dict.get(category, []))
+        
+#         products = list(set(products))  # Remove duplicates if any
+        
+#         return [{'label': product, 'value': product} for product in products], []
+    
+#     return dcc.no_update, []
 
 @app.callback(
     Output('product-select', 'value'),
@@ -224,6 +303,20 @@ def set_product_value(available_options):
     if available_options:
         return available_options[0]['value']
     return None
+
+@app.callback(
+    Output('start-date', 'value'),
+    Output('end-date', 'value'),
+    Input('quarter-select', 'value')
+)
+def set_date_select(selected_quarter):
+    if selected_quarter:
+        start_date = quarter_dates[selected_quarter][0]
+        end_date = quarter_dates[selected_quarter][1]
+        print(start_date, end_date)
+        return start_date, end_date
+    else:
+        return None, None
 
 
 @callback(
@@ -264,7 +357,7 @@ def filter_dataframe(date_start=None, date_end=None
         filtered_df = filtered_df[filtered_df['outlet_name'].isin(location)]
 
     if quarter_year is not None and len(quarter_year) > 0:
-        filtered_df = filtered_df[filtered_df['quarter_year'].isin(quarter_year)]
+        filtered_df = filtered_df[filtered_df['quarter_year'] == quarter_year]
 
     return Serverside(filtered_df)  # no JSON serialization here
 

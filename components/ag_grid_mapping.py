@@ -1,6 +1,6 @@
 ag_grid_map = [
-    { 'field': 'clean_product_name', 'headerName': 'Product','filter': True},
-    { 'field': 'product_type', 'headerName': 'Category','filter': True },
+    { 'field': 'clean_product_name', 'headerName': 'Product','filter': True, 'pinned': 'left'},
+    { 'field': 'product_type', 'headerName': 'Category','filter': True, 'pinned': 'left'},
     { 'field': 'total_revenue', 'headerName': 'Total Revenue','filter': True },
     { 'field': 'current_quarter_revenue', 'headerName': 'Current Quarter Revenue','filter': True },
     { 'field': 'last_quarter_revenue', 'headerName': 'Last Quarter Revenue','filter': True },
