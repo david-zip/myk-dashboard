@@ -116,3 +116,14 @@ def bar_chart_vertical(
     fig_.update_layout(uniformtext_minsize=8, uniformtext_mode="hide" )
     fig_.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
     return fig_
+
+
+def plot_chart(data, chart_type):
+    if chart_type == "pie":
+        return plot_pie_chart()
+    
+    elif chart_type == "line":
+        return plot_line_chart()
+    
+    else:
+        return bar_chart_vertical()

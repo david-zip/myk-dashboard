@@ -127,31 +127,72 @@ def create_card(title, curr_metric, prev_metric=None, icon=None):
 
 
 
-def create_card_dmc(title, content, button_id, w=700, h=600):
-    # add id for each button
-    card = dmc.Card(
-    children=[
-        dmc.Text(title, fw=500),
-        html.P(content),
-        dmc.Button(
-            "Generate Insights",
-            id=button_id,
-            mt="md",
-            radius="md",
-            variant="gradient",
-            gradient={"from": "indigo", "to": "cyan"},
-        ),
-    ],
-    withBorder=True,
-    ml="sm",
-    shadow="sm",
-    radius="sm",
-    
-    w=w, #780
-    h=h
+def create_card_dmc(title, content, button_id, w=700, h=600, add_graph_options=False):
+    # Add id for each button
+    graph_options = dmc.Group(
+        [
+            dmc.ActionIcon(
+                DashIconify(icon="oui:vis-pie"),
+                variant="outline",
+                color="blue",
+                id="pie_" + button_id
+            ),
+            dmc.ActionIcon(
+                DashIconify(icon="mdi:chart-line"),
+                variant="outline",
+                color="blue",
+                id="line_" + button_id
+            ),
+            dmc.ActionIcon(
+                DashIconify(icon="raphael:barchart"),
+                variant="outline",
+                color="blue",
+                id="bar_" + button_id
+            ),
+        ]
     )
+
+    button_with_options = html.Div(
+        [
+            dmc.Button(
+                "Generate Insights",
+                id=button_id,
+                mt="md",
+                radius="md",
+                variant="gradient",
+                gradient={"from": "indigo", "to": "cyan"},
+            ),
+            html.Div(
+                graph_options,
+                style={
+                    'display': 'inline-block',
+                    'verticalAlign': 'bottom',
+                    'marginLeft': 'auto',
+                    'marginTop': '20px',  # Adjust this value to position the icons lower
+                    'float': 'right',
+                }
+            )
+        ],
+        style={'display': 'flex', 'justifyContent': 'space-between'}
+    )
+
+    card = dmc.Card(
+        children=[
+            dmc.Text(title, fw=500),
+            html.P(content),
+            button_with_options
+        ],
+        withBorder=True,
+        ml="sm",
+        shadow="sm",
+        radius="sm",
+        w=w,
+        h=h
+    )
+
     card_with_spacing = html.Div([card, html.Div(style={'margin-bottom': '40px'})])
-    return card_with_spacing 
+    return card_with_spacing
+
 
 
 def create_accordion_label(label, image, description):
