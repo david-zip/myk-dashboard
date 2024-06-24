@@ -118,12 +118,23 @@ def bar_chart_vertical(
     return fig_
 
 
-def plot_chart(data, chart_type):
+def plot_chart(
+              data
+             ,chart_type
+             ,x
+             ,y
+             ,group_by
+             ,sort_by
+             , ascending
+             ):
+
     if chart_type == "pie":
-        return plot_pie_chart()
+        return plot_pie_chart(df=df, group_by=group_by, x=x
+                         ,y=y, sort_by=sort_by, ascending=True))
     
     elif chart_type == "line":
-        return plot_line_chart()
+        return plot_line_chart(df=df, group_by=group_by, x=x
+                         ,y=y, sort_by=sort_by, ascending=True)
     
     else:
-        return bar_chart_vertical()
+        return bar_chart_vertical(data=df, x=x, y=y, color=x)
