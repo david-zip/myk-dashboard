@@ -1,0 +1,4 @@
+id,prompt,response
+1,1. What is the total quantity sold for each outlet in a specific year?,The total quantity sold for each outlet in the year 2024 is as follows:\n1. Ayam! Alun-Alun BKS: 329\n2. Ayam! Dapur Kitchen BKS: 1929\n3. Ayam! Libersa Park BKS: 347\n4. Ayam! RSIJ: 412\n5. Ayam! Tambun BKS: 193\n6. Bandung: 2264\n7. Bekasi - Perjuangan: 39876\n8. Cibubur: 14186\n9. Jakbar - Taman Palem: 8531\n10. Jaksel - Pondok Indah: 14574
+2,2. How does the growth rate vary across different months for a particular outlet?,"The growth rate for the outlet ""Ayam! Alun-Alun BKS"" varies across different months as follows:\n- In March, the growth rate is not available.\n- In April, the growth rate is -22.09%.\n- In May, the growth rate is -82.84%."
+3,3. Can you provide a trend analysis of quantity changes over the years for all outlets?,"The total quantity of products sold across all outlets in the year 2024 was 100,228."
