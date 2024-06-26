@@ -40,6 +40,8 @@ def generate_sales_table(data):
     last_month_revenue = df_last_month.groupby(['clean_product_name', 'product_type'])['total_order_amount']\
         .sum().reset_index().rename(columns={'total_order_amount': 'last_month_revenue'})
 
+    # Profit
+
     # Merge all dataframes into a single dataframe
     sales_performance_df = total_revenue_df.merge(current_quarter_revenue, on=["clean_product_name", "product_type"], how='left')\
         .merge(last_quarter_revenue, on=["clean_product_name", "product_type"], how='left')\
@@ -49,16 +51,16 @@ def generate_sales_table(data):
     # Fill NaN values with 0 (if appropriate for your context)
     sales_performance_df = sales_performance_df.fillna(0)
 
-    
+    # Revenue growth
     sales_performance_df['quarterly_growth'] = (sales_performance_df['current_quarter_revenue'] - sales_performance_df['last_quarter_revenue']) / sales_performance_df['last_quarter_revenue'] * 100
     sales_performance_df['monthly_growth'] = (sales_performance_df['current_month_revenue'] - sales_performance_df['last_month_revenue']) / sales_performance_df['last_month_revenue'] * 100
     
-    # Calc growth
+    # Calc growth Revenue
     sales_performance_df['quarter_Growth(%)'] = ((sales_performance_df['current_quarter_revenue'] - \
                                          sales_performance_df['last_quarter_revenue']) / (sales_performance_df['current_quarter_revenue'] +  sales_performance_df['last_quarter_revenue'])).round(2)
     sales_performance_df['Monthly_Growth(%)'] = ((sales_performance_df['current_month_revenue'] - \
                                             sales_performance_df['last_month_revenue']) / (sales_performance_df['current_month_revenue'] + sales_performance_df['last_month_revenue'])).round(2)
-    return sales_performance_df
+    return sales_performance_df.to_dict(orient='records')
 
 def generate_location_df(data):
     df = data.copy()
