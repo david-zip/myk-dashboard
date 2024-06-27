@@ -60,7 +60,7 @@ def generate_sales_table(data):
                                          sales_performance_df['last_quarter_revenue']) / (sales_performance_df['current_quarter_revenue'] +  sales_performance_df['last_quarter_revenue'])).round(2)
     sales_performance_df['Monthly_Growth(%)'] = ((sales_performance_df['current_month_revenue'] - \
                                             sales_performance_df['last_month_revenue']) / (sales_performance_df['current_month_revenue'] + sales_performance_df['last_month_revenue'])).round(2)
-    return sales_performance_df.to_dict(orient='records')
+    return sales_performance_df
 
 def generate_location_df(data):
     df = data.copy()
