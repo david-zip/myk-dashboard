@@ -41,6 +41,33 @@ def plot_line_chart(df
         raise
 
 
+def plot_pie_chart(df, group_by="category", values="quantity", title=None, sort_by=None, ascending=False):
+    """
+    Creates a pie chart using Plotly.
+
+    Parameters:
+    - df: pandas DataFrame containing the data
+    - group_by: column name to group the data by (default is "category")
+    - values: column name for the values (default is "quantity")
+    - title: title of the chart (default is None)
+    - sort_by: column name to sort the data by (default is None)
+    - ascending: boolean to sort in ascending order (default is False)
+
+    Returns:
+    - fig: Plotly figure object
+    """
+    try:
+        if sort_by:
+            agg_df = df.groupby(group_by)[values].sum().reset_index().sort_values(by=sort_by, ascending=ascending)
+        else:
+            agg_df = df.groupby(group_by)[values].sum().reset_index()
+
+        fig = px.pie(agg_df, names=group_by, values=values, title=title, template="plotly")
+        return fig
+    except Exception as e:
+        raise e
+
+
 def bar_chart_vertical(
     data,
     x,
@@ -121,20 +148,19 @@ def bar_chart_vertical(
 def plot_chart(
               data
              ,chart_type
-             ,x
-             ,y
-             ,group_by
-             ,sort_by
-             , ascending
+             ,x=None
+             ,y=None
+             ,group_by=None
+             ,sort_by=None
+             ,ascending=True
              ):
 
     if chart_type == "pie":
-        return plot_pie_chart(df=df, group_by=group_by, x=x
-                         ,y=y, sort_by=sort_by, ascending=True))
+        return plot_pie_chart(data, group_by="category", values="quantity", title=None, sort_by=None, ascending=False)
     
     elif chart_type == "line":
-        return plot_line_chart(df=df, group_by=group_by, x=x
+        return plot_line_chart(df=data, group_by=group_by, x=x
                          ,y=y, sort_by=sort_by, ascending=True)
     
     else:
-        return bar_chart_vertical(data=df, x=x, y=y, color=x)
+        return bar_chart_vertical(data=data, x=x, y=y, color=x)

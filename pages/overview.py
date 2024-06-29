@@ -18,49 +18,48 @@ dash.register_page(
     name='Our Analytics Dashboard'
 )
  
-# df = pd.read_excel("data/full_iseller_data.xlsx")
-# df = pd.read_excel("data/.full_iseller_data.xlsx.icloud")
 
 
-# product_quantity = df.groupby('product_name')['quantity'].sum().reset_index()\
-#     .sort_values(by='quantity', ascending=False)
+llm_output_df = pd.read_csv("data/llm_output.csv")
+
+def transform_prompt_output_to_accordion(data, graph_name):
+    images = "/assets/png-transparent-honda-insight-customer-insight-management-service-service-industry-miscellaneous-company-building-thumbnail.png"
+    prompt_list = []
+    graph_name = graph_name
+    filtered_df = data[data["graph_name"] == graph_name]
+    i = 1
+    for _, row in filtered_df.iterrows():
+        prompt_output = {
+            "id": "",
+            "image": images,
+            "label": f"Weekly Insight {i}",
+            "description": row["prompt"],
+            "response": row["response"]
+        }
+        prompt_list.append(prompt_output)
+        i += 1
+
+    accordion_items = []
+
+    for index, prompt in enumerate(prompt_list):
+        label = create_accordion_label(prompt["label"], prompt["image"], prompt["description"])
+        content = create_accordion_content(prompt["response"])
+        accordion_item = dmc.AccordionItem(
+            children=[label, content],  # Combine label and content as children
+            value=str(index + 1)  # Using the index as a unique value
+        )
+        accordion_items.append(accordion_item)
+
+    return accordion_items
 
 # TEMP
-characters_list = [
-    {
-        "id": "bender",
-        "image": "https://img.icons8.com/clouds/256/000000/futurama-bender.png",
-        "label": "Prompt 1",
-        "description": "Tell me what are the top 5 Selling Products",
-        "content": "Bender Bending Rodríguez, (born September 4, 2996), designated Bending Unit 22, and commonly "
-        "known as Bender, is a bending unit created by a division of MomCorp in Tijuana, Mexico, "
-        "and his serial number is 2716057. His mugshot id number is 01473. He is Fry's best friend.",
-    },
-    {
-        "id": "carol",
-        "image": "https://img.icons8.com/clouds/256/000000/futurama-mom.png",
-        "label": "Prompt 2",
-        "description": "Based on this Data, which Cateory of Drinks should I prioritize",
-        "content": "Carol Miller (born January 30, 2880), better known as Mom, is the evil chief executive officer "
-        "and shareholder of 99.7% of Momcorp, one of the largest industrial conglomerates in the universe "
-        "and the source of most of Earth's robots. She is also one of the main antagonists of the Futurama "
-        "series.",
-    },
-    {
-        "id": "homer",
-        "image": "https://img.icons8.com/clouds/256/000000/homer-simpson.png",
-        "label": "Prompt 3",
-        "description": "Prompt 3 ",
-        "content": "Homer Jay Simpson (born May 12) is the main protagonist and one of the five main characters of "
-        "The Simpsons series(or show). He is the spouse of Marge Simpson and father of Bart, "
-        "Lisa and Maggie Simpson.",
-    },
-]
+images= "/assets/png-transparent-honda-insight-customer-insight-management-service-service-industry-miscellaneous-company-building-thumbnail.png"
+
 
 graphs = dbc.Col([
     dbc.Row([
         dbc.Col(
-            create_card_dmc("Top Selling Product by Quantity", dcc.Loading(dcc.Graph(id='top-product-bar')), "bar-button"),
+            create_card_dmc("Top Selling Product by Quantity", dcc.Loading(dcc.Graph(id='top-product-bar')), "product-bar-button"),
             width=6,  # Width set to 6 to allow two columns in a row
             style={"padding": "8px"}  # Adjust padding as needed
         ),
@@ -107,18 +106,8 @@ layout = html.Div([
                 dmc.Accordion(
                 chevronPosition="right",
                 variant="contained",
-                children=[
-                    dmc.AccordionItem(
-                        [
-                            create_accordion_label(
-                                character["label"], character["image"], character["description"]
-                            ),
-                            create_accordion_content(character["content"]),
-                        ],
-                        value=character["id"],
-                    )
-                    for character in characters_list
-                ],
+                id="accordion-item",
+                children=[],
             ),
             dmc.Space(h=10),
             html.H4("Write your own prompts"),
@@ -223,34 +212,94 @@ def plot_monthly_sales(data):
     return fig
 
 @callback(
-    Output("modal-simple", "opened"),
-    Output("modal-title", "children"),
-
-    Input("bar-button", "n_clicks"),
-    Input("monthly-category-button", "n_clicks"),
-    Input("monthly-q-button", "n_clicks"),
-    Input("daily-q-button", "n_clicks"),
-    Input("modal-close-button", "n_clicks"),
-    Input("modal-submit-button", "n_clicks"),
-    State("modal-simple", "opened"),
+    [
+        Output("modal-simple", "opened"),
+        Output("modal-title", "children"),
+        Output("accordion-item", "children"),
+    ],
+    [
+        Input("product-bar-button", "n_clicks"),
+        Input("monthly-category-button", "n_clicks"),
+        Input("monthly-q-button", "n_clicks"),
+        Input("daily-q-button", "n_clicks"),
+        Input("modal-close-button", "n_clicks"),
+        Input("modal-submit-button", "n_clicks"),
+    ],
+    [State("modal-simple", "opened")],
     prevent_initial_call=True,
 )
 def modal_demo(nc1, nc2, nc3, nc4, nc5, nc6, opened):
-    button_id = ctx.triggered_id if not None else 'No clicks yet'
-    print(button_id)
-    if button_id == "bar-button":
-        title = "Bar graph Insights"
-        return not opened, title
+    button_id = ctx.triggered_id if ctx.triggered_id else 'No clicks yet'
+    if button_id in ["product-bar-button", "monthly-category-button", "monthly-q-button", "daily-q-button"]:
+        title_map = {
+            "product-bar-button": "Bar graph Insights",
+            "monthly-category-button": "Monthly Category Insights",
+            "monthly-q-button": "Pie Chart Insights",
+            "daily-q-button": "Daily Quantity Insights"
+        }
+        title = title_map.get(button_id)
+        if title == "Bar graph Insights":
+            graph_name = "top product by category sold"
+       
+        elif title == "Monthly Category Insight":
+            graph_name = "top product by category sold"
+        
+        elif title == "Pie Chart Insights":
+            graph_name = "top product by quantity sold"
+        
+        elif title == "Daily Quantity Insights":
+            graph_name = "sales"
+
+        accordion_child = transform_prompt_output_to_accordion(llm_output_df, graph_name)
+        return not opened, title, accordion_child
+    return not opened, dash.no_update, dash.no_update
+
+# @callback(
+#     Output("modal-simple", "opened"),
+#     Output("modal-title", "children"),
+#     Output("accordion-item", "children"),
+
+#     Input("product-bar-button", "n_clicks"),
+#     Input("monthly-category-button", "n_clicks"),
+#     Input("monthly-q-button", "n_clicks"),
+#     Input("daily-q-button", "n_clicks"),
+#     Input("modal-close-button", "n_clicks"),
+#     Input("modal-submit-button", "n_clicks"),
+#     State("modal-simple", "opened"),
+#     prevent_initial_call=True,
+# )
+# def modal_demo(nc1, nc2, nc3, nc4, nc5, nc6, opened):
+#     button_id = ctx.triggered_id if not None else 'No clicks yet'
+#     print(button_id)
+#     if button_id == "product-bar-button":
+        
+#         title = "Bar graph Insights"
+#         graph_name = "top product by category sold"
+#         accordion_child = transform_prompt_output_to_accordion(llm_output_df, graph_name)
+        
+#         return not opened, title, accordion_child
     
-    elif button_id == "monthly-category-button":
-        title = "Monthly Category Insights"
-        return not opened, title
+#     elif button_id == "monthly-category-button":
+        
+#         title = "Monthly Category Insights"
+#         graph_name = "top product by category sold"
+#         accordion_child = transform_prompt_output_to_accordion(llm_output_df, graph_name)
+        
+#         return not opened, title, accordion_child
     
-    elif button_id == "monthly-q-button":
-        title = "Pie Chart Insights"
-        return not opened, title
+#     elif button_id == "monthly-q-button":
+        
+#         title = "Pie Chart Insights"
+#         graph_name = "top product by category sold"
+#         accordion_child = transform_prompt_output_to_accordion(llm_output_df, graph_name)
+        
+#         return not opened, title, accordion_child
     
-    elif button_id == "daily-q-button":
-        title = "Daily Quanity Insights"
-        return not opened, title
-    return not opened
+#     elif button_id == "daily-q-button":
+        
+#         title = "Daily Quanity Insights"
+#         graph_name = "top product by category sold"
+#         accordion_child = transform_prompt_output_to_accordion(llm_output_df, graph_name)
+        
+#         return not opened, title, accordion_child
+#     return not opened
